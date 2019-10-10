@@ -117,233 +117,79 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"src/javascript/index.js":[function(require,module,exports) {
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+})({"node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
+var bundleURL = null;
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-// import './icons.js'
-// import Swiper from './swiper.js'
-var Player =
-/*#__PURE__*/
-function () {
-  function Player(node) {
-    var _this = this;
-
-    _classCallCheck(this, Player);
-
-    this.root = typeof node === 'string' ? document.querySelector(node) : node;
-
-    this.$ = function (selector) {
-      return _this.root.querySelector(selector);
-    };
-
-    this.$$ = function (selector) {
-      return _this.root.querySelectorAll(selector);
-    };
-
-    this.songList = [];
-    this.currentIndex = 0;
-    this.audio = new Audio();
-    this.lyricsArr = [];
-    this.lyricIndex = -1;
-    this.start();
-    this.bind();
+function getBundleURLCached() {
+  if (!bundleURL) {
+    bundleURL = getBundleURL();
   }
 
-  _createClass(Player, [{
-    key: "start",
-    value: function start() {
-      var _this2 = this;
+  return bundleURL;
+}
 
-      fetch('https://jirengu.github.io/data-mock/huawei-music/music-list.json').then(function (res) {
-        return res.json();
-      }).then(function (data) {
-        console.log(data);
-        _this2.songList = data;
+function getBundleURL() {
+  // Attempt to find the URL of the current script and use that as the base URL
+  try {
+    throw new Error();
+  } catch (err) {
+    var matches = ('' + err.stack).match(/(https?|file|ftp|chrome-extension|moz-extension):\/\/[^)\n]+/g);
 
-        _this2.loadSong();
-      });
+    if (matches) {
+      return getBaseURL(matches[0]);
     }
-  }, {
-    key: "bind",
-    value: function bind() {
-      var self = this;
+  }
 
-      this.$('.btn-play-pause').onclick = function () {
-        if (this.classList.contains('playing')) {
-          self.audio.pause();
-          this.classList.remove('playing');
-          this.classList.add('pause');
-          this.querySelector('use').setAttribute('xlink:href', '#icon-play');
-        } else if (this.classList.contains('pause')) {
-          self.audio.play();
-          this.classList.remove('pause');
-          this.classList.add('playing');
-          this.querySelector('use').setAttribute('xlink:href', '#icon-pause');
-        }
-      };
+  return '/';
+}
 
-      this.$('.btn-pre').onclick = function () {
-        console.log('pre');
-        self.currentIndex = (self.songList.length + self.currentIndex - 1) % self.songList.length;
-        self.loadSong();
-        self.playSong();
-      };
+function getBaseURL(url) {
+  return ('' + url).replace(/^((?:https?|file|ftp|chrome-extension|moz-extension):\/\/.+)\/[^/]+$/, '$1') + '/';
+}
 
-      this.$('.btn-next').onclick = function () {
-        self.currentIndex = (self.currentIndex + 1) % self.songList.length;
-        self.loadSong();
-        self.playSong();
-      };
+exports.getBundleURL = getBundleURLCached;
+exports.getBaseURL = getBaseURL;
+},{}],"node_modules/parcel-bundler/src/builtins/css-loader.js":[function(require,module,exports) {
+var bundle = require('./bundle-url');
 
-      this.audio.ontimeupdate = function () {
-        console.log(parseInt(self.audio.currentTime * 1000));
-        self.locateLyric();
-        self.setProgressBar();
-      };
+function updateLink(link) {
+  var newLink = link.cloneNode();
 
-      var swiper = new Swiper(this.$('.panels'));
-      swiper.on('swipLeft', function () {
-        this.classList.remove('panel1');
-        this.classList.add('panel2');
-        console.log('left');
-      });
-      swiper.on('swipRight', function () {
-        this.classList.remove('panel2');
-        this.classList.add('panel1');
-        console.log('right');
-      });
-    }
-  }, {
-    key: "loadSong",
-    value: function loadSong() {
-      var _this3 = this;
+  newLink.onload = function () {
+    link.remove();
+  };
 
-      var songObj = this.songList[this.currentIndex];
-      this.$('.header h1').innerText = songObj.title;
-      this.$('.header p').innerText = songObj.author + '-' + songObj.albumn;
-      this.audio.src = songObj.url;
+  newLink.href = link.href.split('?')[0] + '?' + Date.now();
+  link.parentNode.insertBefore(newLink, link.nextSibling);
+}
 
-      this.audio.onloadedmetadata = function () {
-        return _this3.$('.time-end').innerText = _this3.formateTime(_this3.audio.duration);
-      };
+var cssTimeout = null;
 
-      this.loadLyric();
-    }
-  }, {
-    key: "playSong",
-    value: function playSong() {
-      var _this4 = this;
+function reloadCSS() {
+  if (cssTimeout) {
+    return;
+  }
 
-      this.audio.oncanplaythrough = function () {
-        return _this4.audio.play();
-      };
-    }
-  }, {
-    key: "loadLyric",
-    value: function loadLyric() {
-      var _this5 = this;
+  cssTimeout = setTimeout(function () {
+    var links = document.querySelectorAll('link[rel="stylesheet"]');
 
-      fetch(this.songList[this.currentIndex].lyric).then(function (res) {
-        return res.json();
-      }).then(function (data) {
-        console.log(data.lrc.lyric);
-
-        _this5.setLyrics(data.lrc.lyric);
-
-        window.lyrics = data.lrc.lyric;
-      });
-    }
-  }, {
-    key: "locateLyric",
-    value: function locateLyric() {
-      console.log('locateLyric');
-      var currentTime = this.audio.currentTime * 1000;
-      var nextLineTime = this.lyricsArr[this.lyricIndex + 1][0];
-
-      if (currentTime > nextLineTime && this.lyricIndex < this.lyricsArr.length - 1) {
-        this.lyricIndex++;
-        var node = this.$('[data-time="' + this.lyricsArr[this.lyricIndex][0] + '"]');
-        if (node) this.setLyricToCenter(node);
-        this.$$('.panel-effect .lyric p')[0].innerText = this.lyricsArr[this.lyricIndex][1];
-        this.$$('.panel-effect .lyric p')[1].innerText = this.lyricsArr[this.lyricIndex + 1] ? this.lyricsArr[this.lyricIndex + 1][1] : '';
+    for (var i = 0; i < links.length; i++) {
+      if (bundle.getBaseURL(links[i].href) === bundle.getBundleURL()) {
+        updateLink(links[i]);
       }
     }
-  }, {
-    key: "setLyrics",
-    value: function setLyrics(lyrics) {
-      this.lyricIndex = 0;
-      var fragment = document.createDocumentFragment();
-      var lyricsArr = [];
-      this.lyricsArr = lyricsArr;
-      lyrics.split(/\n/).filter(function (str) {
-        return str.match(/\[.+?\]/);
-      }).forEach(function (line) {
-        var str = line.replace(/\[.+?\]/g, '');
-        line.match(/\[.+?\]/g).forEach(function (t) {
-          t = t.replace(/[\[\]]/g, '');
-          var milliseconds = parseInt(t.slice(0, 2)) * 60 * 1000 + parseInt(t.slice(3, 5)) * 1000 + parseInt(t.slice(6));
-          lyricsArr.push([milliseconds, str]);
-        });
-      });
-      lyricsArr.filter(function (line) {
-        return line[1].trim() !== '';
-      }).sort(function (v1, v2) {
-        if (v1[0] > v2[0]) {
-          return 1;
-        } else {
-          return -1;
-        }
-      }).forEach(function (line) {
-        var node = document.createElement('p');
-        node.setAttribute('data-time', line[0]);
-        node.innerText = line[1];
-        fragment.appendChild(node);
-      });
-      this.$('.panel-lyrics .container').innerHTML = '';
-      this.$('.panel-lyrics .container').appendChild(fragment);
-    }
-  }, {
-    key: "setLyricToCenter",
-    value: function setLyricToCenter(node) {
-      console.log(node);
-      var translateY = node.offsetTop - this.$('.panel-lyrics').offsetHeight / 2;
-      translateY = translateY > 0 ? translateY : 0;
-      this.$('.panel-lyrics .container').style.transform = "translateY(-".concat(translateY, "px)");
-      this.$$('.panel-lyrics p').forEach(function (node) {
-        return node.classList.remove('current');
-      });
-      node.classList.add('current');
-    }
-  }, {
-    key: "setProgressBar",
-    value: function setProgressBar() {
-      console.log('set setProgerssBar');
-      var percent = this.audio.currentTime * 100 / this.audio.duration + '%';
-      console.log(percent);
-      this.$('.bar .progress').style.width = percent;
-      this.$('.time-start').innerText = this.formateTime(this.audio.currentTime);
-      console.log(this.$('.bar .progress').style.width);
-    }
-  }, {
-    key: "formateTime",
-    value: function formateTime(secondsTotal) {
-      var minutes = parseInt(secondsTotal / 60);
-      minutes = minutes >= 10 ? '' + minutes : '0' + minutes;
-      var seconds = parseInt(secondsTotal % 60);
-      seconds = seconds >= 10 ? '' + seconds : '0' + seconds;
-      return minutes + ':' + seconds;
-    }
-  }]);
 
-  return Player;
-}();
+    cssTimeout = null;
+  }, 50);
+}
 
-window.p = new Player('#player');
-},{}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+module.exports = reloadCSS;
+},{"./bundle-url":"node_modules/parcel-bundler/src/builtins/bundle-url.js"}],"src/scss/index.css":[function(require,module,exports) {
+var reloadCSS = require('_css_loader');
+
+module.hot.dispose(reloadCSS);
+module.hot.accept(reloadCSS);
+},{"./..\\svg\\effect-no-move.svg":[["effect-no-move.e6a51026.svg","src/svg/effect-no-move.svg"],"src/svg/effect-no-move.svg"],"./..\\svg\\effect-move1.svg":[["effect-move1.8d0ce205.svg","src/svg/effect-move1.svg"],"src/svg/effect-move1.svg"],"./..\\svg\\effect-move2.svg":[["effect-move2.143040a0.svg","src/svg/effect-move2.svg"],"src/svg/effect-move2.svg"],"./..\\svg\\progress.svg":[["progress.798a5c76.svg","src/svg/progress.svg"],"src/svg/progress.svg"],"_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -547,5 +393,5 @@ function hmrAcceptRun(bundle, id) {
     return true;
   }
 }
-},{}]},{},["node_modules/parcel-bundler/src/builtins/hmr-runtime.js","src/javascript/index.js"], null)
-//# sourceMappingURL=/javascript.19a21263.js.map
+},{}]},{},["node_modules/parcel-bundler/src/builtins/hmr-runtime.js"], null)
+//# sourceMappingURL=/scss.9e6b2711.js.map

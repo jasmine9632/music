@@ -1,5 +1,5 @@
-import './icons.js'
-import Swiper from './swiper.js'
+// import './icons.js'
+// import Swiper from './swiper.js'
 
 class Player {
     constructor(node) {
